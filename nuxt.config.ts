@@ -1,7 +1,11 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  modules: ['nuxt-mongoose'],
+  mongoose: {
+    uri: process.env.NUXT_MONGODB_URI || '',
+    modelsDir: 'models'
+  },
   app: {
     head: {
       htmlAttrs: {
@@ -12,9 +16,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   css: ['~/assets/styles/main.css'],
-  runtimeConfig: {
-    mongodbUri: ''
-  },
   vite: {
     plugins: [
       tailwindcss()

@@ -1,12 +1,11 @@
-import { connectToMongoDB } from '../utils/mongodb'
+import mongoose from 'mongoose'
 
 async function checkHealth() {
-  try {
-    await connectToMongoDB()
-    return { status: 'ok' }
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error)
-    return { status: 'error', message: 'An error has occurred in the server.' }
+  const isConnected = mongoose.connection.readyState === 1
+
+  return {
+    status: isConnected ? 'Okay' : 'Degraded',
+    message: isConnected ? 'MongoDB connected.' : 'MongoDB not connected yet.'
   }
 }
 
