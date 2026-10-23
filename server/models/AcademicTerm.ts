@@ -1,7 +1,9 @@
-import type { InferSchemaType } from 'mongoose'
+import type { SchemaDefinition } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 
-const academicTermSchema = {
+import type { AcademicTerm } from '#shared/types/AcademicTerm'
+
+const academicTermSchema: SchemaDefinition<AcademicTerm> = {
   title: {
     type: String,
     required: true,
@@ -20,7 +22,7 @@ const academicTermSchema = {
   }
 }
 
-export const AcademicTermModel = defineMongooseModel({
+export const AcademicTermModel = defineMongooseModel<AcademicTerm>({
   name: 'AcademicTerm',
   schema: academicTermSchema,
   options: {
@@ -28,5 +30,3 @@ export const AcademicTermModel = defineMongooseModel({
     timestamps: true
   }
 })
-
-export type AcademicTerm = InferSchemaType<typeof academicTermSchema>
