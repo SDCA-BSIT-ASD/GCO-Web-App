@@ -19,6 +19,15 @@ const userSchema: SchemaDefinition<User> = {
     type: String,
     required: true,
     trim: true
+  },
+  googleId: {
+    type: String,
+    trim: true,
+    sparse: true
+  },
+  avatarUrl: {
+    type: String,
+    trim: true
   }
 }
 

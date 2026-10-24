@@ -2,6 +2,8 @@ export interface User {
   emailAddress: string
   firstName: string
   lastName: string
+  googleId?: string
+  avatarUrl?: string
   createdAt: Date
   updatedAt: Date
 }
