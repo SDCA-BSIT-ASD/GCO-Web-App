@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "GCO Web App",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
