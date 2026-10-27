@@ -6,7 +6,7 @@
       <!-- Logo & Title -->
       <NuxtLink to="/" class="mb-6 flex items-center gap-3 px-2">
         <img src="~/assets/logos/sdca-logo.png" alt="SDCA Logo" class="h-9 w-9 object-contain"/>
-        <span class="text-xl font-bold">SDCA-GCO</span>
+        <span class="whitespace-nowrap text-xl font-bold">SDCA-GCO</span>
       </NuxtLink>
       <!-- User Info -->
       <div class="mb-4 flex items-center gap-3 rounded-box bg-base-200 p-3">

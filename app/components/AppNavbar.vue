@@ -8,7 +8,7 @@
       </label>
       <NuxtLink to="/" class="flex items-center gap-2 px-2">
         <img src="~/assets/logos/sdca-logo.png" alt="SDCA Logo" class="h-8 w-8 object-contain"/>
-        <span class="text-lg font-bold">SDCA-GCO</span>
+        <span class="whitespace-nowrap text-lg font-bold">SDCA-GCO</span>
       </NuxtLink>
     </div>
     <!-- Center: Nav links (Desktop Only) -->
