@@ -162,12 +162,29 @@
     isSubmitting.value = true
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 900))
+      await $fetch('/api/academic-programs', {
+        method: 'POST',
+        body: {
+          programCode: programCode.value,
+          programName: programName.value
+        }
+      })
 
       successMessage.value = 'Academic program created successfully.'
       clearForm()
     } catch (error: any) {
-      errors.value.submit = 'Unable to create academic program. Please try again.'
+      const statusCode = error?.statusCode || error?.response?.status
+      const message = error?.data?.statusMessage || error?.statusMessage || error?.message
+
+      if (statusCode === 409) {
+        errors.value.submit = 'An academic program already exists with those details.'
+      } else if (statusCode === 400 || statusCode === 422) {
+        errors.value.submit = message || 'Invalid academic program data.'
+      } else if (statusCode === 401 || statusCode === 403) {
+        errors.value.submit = 'You are not authorized to create academic programs.'
+      } else {
+        errors.value.submit = 'Unable to create academic program. Please try again.'
+      }
     } finally {
       isSubmitting.value = false
     }

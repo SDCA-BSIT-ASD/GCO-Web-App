@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import NewAcademicProgramPage from './new.vue'
 
 describe('Academic program form page', () => {
@@ -29,5 +29,26 @@ describe('Academic program form page', () => {
     await input.setValue('bsit-2026!')
 
     expect((input.element as HTMLInputElement).value).toBe('BSIT2026')
+  })
+
+  it('submits the form to the academic programs API', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ message: 'Academic program created successfully.' })
+    vi.stubGlobal('$fetch', fetchMock)
+
+    const wrapper = mount(NewAcademicProgramPage)
+
+    await wrapper.get('#program-code').setValue('bsit')
+    await wrapper.get('#program-name').setValue('Bachelor of Science in Information Technology')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/academic-programs', {
+      method: 'POST',
+      body: {
+        programCode: 'BSIT',
+        programName: 'Bachelor of Science in Information Technology'
+      }
+    })
+
+    vi.unstubAllGlobals()
   })
 })
