@@ -21,3 +21,6 @@ logs
 # Local env files
 .env
 !.env.example
+
+# Bruno local env files
+bruno/environments/Local.bru
