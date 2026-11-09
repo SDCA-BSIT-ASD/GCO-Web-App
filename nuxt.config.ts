@@ -1,7 +1,10 @@
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
-  modules: ['nuxt-mongoose'],
+  modules: [
+    '@nuxt/test-utils/module',
+    'nuxt-mongoose'
+  ],
   runtimeConfig: {
     sessionSecret: process.env.NUXT_SESSION_SECRET || 'gco-dev-session-secret',
     google: {
