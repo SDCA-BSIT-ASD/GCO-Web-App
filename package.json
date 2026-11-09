@@ -21,6 +21,8 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "@nuxt/test-utils": "^4.4.0",
+    "@playwright/test": "^1.65.0",
     "@types/node": "^26.6.5",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/ui": "^5.0.5",
