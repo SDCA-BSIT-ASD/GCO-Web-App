@@ -59,3 +59,48 @@ async function validateStudentEmail(email: unknown, studentId: string) {
 
   return normalizedEmail
 }
+
+function validateYearLevel(yearLevel: unknown) {
+  if (
+    typeof yearLevel !== 'number'
+    || !Number.isInteger(yearLevel)
+    || yearLevel < 1
+    || yearLevel > 5
+  ) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Year level must be an integer between 1 and 5.'
+    })
+  }
+
+  return yearLevel
+}
+
+async function validateProgramName(programName: unknown) {
+  const normalizedProgramName = typeof programName === 'string' ? programName.trim() : ''
+  const program = normalizedProgramName
+    ? await AcademicProgramModel.findOne({
+        programName: { $regex: new RegExp(`^${escapeRegex(normalizedProgramName)}$`, 'i') }
+      })
+    : null
+
+  if (!program) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Program must be a non-empty name matching an existing academic program.'
+    })
+  }
+
+  return program.programName
+}
+
+function validateStudentStatus(status: unknown) {
+  if (status !== 'Regular' && status !== 'Irregular') {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Status must be either "Regular" or "Irregular".'
+    })
+  }
+
+  return status
+}
