@@ -9,6 +9,7 @@ export interface User {
 }
 
 export interface Student extends User {
+  studentNumber: string
   programName: string
   yearLevel: number
   status: string
