@@ -5,6 +5,11 @@ import type { Student } from '#shared/types/User'
 import { UserModel } from './User'
 
 const studentSchema: SchemaDefinition<Student> = {
+  studentNumber: {
+    type: Number,
+    required: true,
+    unique: true
+  },
   programName: {
     type: String,
     required: true
