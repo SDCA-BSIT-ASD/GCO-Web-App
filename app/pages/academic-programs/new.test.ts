@@ -22,13 +22,13 @@ describe('Academic program form page', () => {
     expect(wrapper.text()).toContain('Program name is required.')
   })
 
-  it('formats the program code to uppercase and strips invalid characters while typing', async () => {
+  it('uppercases the program code while preserving invalid characters for validation', async () => {
     const wrapper = mount(NewAcademicProgramPage)
     const input = wrapper.get('#program-code')
 
     await input.setValue('bsit-2026!')
 
-    expect((input.element as HTMLInputElement).value).toBe('BSIT2026')
+    expect((input.element as HTMLInputElement).value).toBe('BSIT-2026!')
   })
 
   it('submits the form to the academic programs API', async () => {
