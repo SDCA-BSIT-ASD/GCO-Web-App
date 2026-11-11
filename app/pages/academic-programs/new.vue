@@ -92,7 +92,7 @@
   }
 
   function formatProgramCode(value: string) {
-    return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    return value.toUpperCase()
   }
 
   function validateProgramCode() {

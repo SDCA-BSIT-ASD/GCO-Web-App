@@ -10,8 +10,15 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: 'unit',
+          include: ['app/**/*.test.{js,ts}', 'server/**/*.test.{js,ts}'],
+          environment: 'jsdom'
+        }
+      },
+      {
+        test: {
           name: 'e2e',
-          include: ['test/e2e/*.{test,spec}.ts'],
+          include: ['tests/e2e/*.{test,spec}.ts'],
           environment: 'node'
         }
       }
