@@ -1,11 +1,9 @@
-
 <script setup lang="ts">
 useHead({
   title: 'Employees | SDCA-GCO',
 })
 
-// TEMPORARY MOCK DATA WILL BE REPLACED ONCE API IS DONE AND CONFIRMED BY GROUP MEMBER
-
+// EMPLOYEE DATA STRUCTURE
 interface Employee {
   employeeNumber: string
   firstName: string
@@ -14,31 +12,38 @@ interface Employee {
   employeeType: string
 }
 
-const employees = ref<Employee[]>([
-  {
-    employeeNumber: 'EMP-001',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'johndoe@example.com',
-    employeeType: 'Regular',
-  },
-  {
-    employeeNumber: 'EMP-002',
-    firstName: 'Anthony',
-    lastName: 'Chen',
-    email: 'antonychen@example.com',
-    employeeType: 'Regular',
-  },
-  {
-    employeeNumber: 'EMP-003',
-    firstName: 'Tony',
-    lastName: 'Stark',
-    email: 'tonystark@example.com',
-    employeeType: 'Part-Time',
-  },
-])
+// API RESPONSE STRUCTURE
+interface EmployeeApiResponse {
+  success: boolean
+  message: string
+  data: Employee[]
+}
 
-// Navigate to the employee detail page
+// FETCH EMPLOYEES FROM BACKEND
+const { data, pending, error } = await useFetch<EmployeeApiResponse>(
+  '/api/employees'
+)
+
+// LOADING STATE
+const isLoading = pending
+
+// ERROR STATE
+const errorMessage = computed(() => {
+  if (error.value) {
+    return 'Failed to load employee records. Please try again later.'
+  }
+
+  if (data.value && !data.value.success) {
+    return data.value.message || 'Failed to load employee records.'
+  }
+
+  return ''
+})
+
+// EMPLOYEE RECORDS
+const employees = computed(() => data.value?.data ?? [])
+
+// NAVIGATE TO EMPLOYEE DETAIL PAGE
 function openEmployee(employeeNumber: string) {
   navigateTo(`/employees/${employeeNumber}`)
 }
@@ -63,6 +68,16 @@ function openEmployee(employeeNumber: string) {
       </NuxtLink>
     </div>
 
+    <div v-if="isLoading">
+      Loading employees list...
+    </div>
+
+    <div v-else-if="errorMessage">
+      {{ errorMessage }}
+      
+    </div>
+
+    <div v-else>
     <!-- EMPLOYEES TABLE -->
     <div class="card bg-base-100 shadow-md">
       <div class="card-body p-0">
@@ -107,6 +122,7 @@ function openEmployee(employeeNumber: string) {
           </p>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>
