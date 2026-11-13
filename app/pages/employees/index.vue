@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 useHead({
   title: 'Employees | SDCA-GCO',
@@ -12,42 +13,54 @@ interface Employee {
   employeeType: string
 }
 
-// API RESPONSE STRUCTURE
-interface EmployeeApiResponse {
-  success: boolean
-  message: string
-  data: Employee[]
-}
-
-// FETCH EMPLOYEES FROM BACKEND
-const { data, pending, error } = await useFetch<EmployeeApiResponse>(
-  '/api/employees'
-)
-
-// LOADING STATE
-const isLoading = pending
-
-// ERROR STATE
-const errorMessage = computed(() => {
-  if (error.value) {
-    return 'Failed to load employee records. Please try again later.'
-  }
-
-  if (data.value && !data.value.success) {
-    return data.value.message || 'Failed to load employee records.'
-  }
-
-  return ''
-})
+// MOCK EMPLOYEE DATA
+const mockEmployees: Employee[] = [
+  {
+    employeeNumber: 'EMP-001',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'johndoe@example.com',
+    employeeType: 'Regular',
+  },
+  {
+    employeeNumber: 'EMP-002',
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'janesmith@example.com',
+    employeeType: 'Part-Time',
+  },
+  {
+    employeeNumber: 'EMP-003',
+    firstName: 'Michael',
+    lastName: 'Reyes',
+    email: 'michaelreyes@example.com',
+    employeeType: 'Regular',
+  },
+]
 
 // EMPLOYEE RECORDS
-const employees = computed(() => data.value?.data ?? [])
+const employees = ref<Employee[]>([])
 
-// NAVIGATE TO EMPLOYEE DETAIL PAGE BUT NOT CONNECTED YET
+// LOADING STATE
+const isLoading = ref(true)
+
+// ERROR STATE
+const errorMessage = ref('')
+
+// SIMULATE FETCHING EMPLOYEES
+onMounted(() => {
+  setTimeout(() => {
+    employees.value = mockEmployees
+    isLoading.value = false
+  }, 1500)
+})
+
+// NAVIGATE TO EMPLOYEE DETAIL PAGE
 function openEmployee(employeeNumber: string) {
   navigateTo(`/employees/${employeeNumber}`)
 }
 </script>
+
 
 <template>
   <div class="p-6">
