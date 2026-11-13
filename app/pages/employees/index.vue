@@ -43,7 +43,7 @@ const errorMessage = computed(() => {
 // EMPLOYEE RECORDS
 const employees = computed(() => data.value?.data ?? [])
 
-// NAVIGATE TO EMPLOYEE DETAIL PAGE
+// NAVIGATE TO EMPLOYEE DETAIL PAGE BUT NOT CONNECTED YET
 function openEmployee(employeeNumber: string) {
   navigateTo(`/employees/${employeeNumber}`)
 }
@@ -59,12 +59,13 @@ function openEmployee(employeeNumber: string) {
           Manage and view employee records.
         </p>
       </div>
-
-      <NuxtLink
+     
+      <!--LINKS TO ADD EMPLOYEE PAGE BUT NOT YET CONNECTED-->
+      <NuxtLink 
         to="/employees/add"
         class="btn btn-primary"
       >
-        + Add Employee
+        + Add Employee 
       </NuxtLink>
     </div>
 
