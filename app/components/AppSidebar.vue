@@ -44,6 +44,7 @@
     { label: 'Dashboard', to: '/' },
     { label: 'Academic Terms', to: '/academic-terms' },
     { label: 'Reports', to: '/reports' },
+    { label: 'Employees', to: '/employees' },
   ]
 
   async function signOut() {
