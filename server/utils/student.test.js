@@ -1,8 +1,17 @@
-// backend mock unit tests for student input validation
-import { describe, it, expect } from 'vitest'
+// backend mock unit tests for student input validation and duplicate email/student number
 
-// file .student does not exist yet
-import { validateStudentInput } from './student'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { StudentModel } from '../models/Student'
+
+// file .student and functions imported are assumed values at this point (mock)
+import { validateStudentInput, assertStudentIsUnique } from './student'
+
+vi.mock('../models/Student', () => ({
+  StudentModel: { findOne: vi.fn() }
+}))
+
+const findOne = vi.mocked(StudentModel.findOne)
 
 // example of a valid payload
 const valid = {
@@ -15,7 +24,6 @@ const valid = {
   status: 'Regular'
 }
 
-// validateStudentInput is a mock function name imported from .student
 describe('validateStudentInput', () => {
   it('accepts a valid payload and trims edges', () => {
     expect(validateStudentInput({ ...valid, firstName: '  Juan  ' })).toEqual(valid)
@@ -25,7 +33,7 @@ describe('validateStudentInput', () => {
     'firstName', 'lastName', 'emailAddress', 'studentNumber',
     'programName', 'yearLevel', 'status'
   ])('rejects a payload missing %s', (field) => {
-    const payload: Record<string, unknown> = { ...valid }
+    const payload = { ...valid }
     delete payload[field]
 
     expect(() => validateStudentInput(payload)).toThrow(
@@ -68,7 +76,6 @@ describe('validateStudentInput', () => {
     )
   })
 
-
   it.each([0, 6, -1, 2.5])('rejects the out-of-range year level %s', (yearLevel) => {
     expect(() => validateStudentInput({ ...valid, yearLevel })).toThrow(
       'Year level must be a valid number.'
@@ -77,5 +84,37 @@ describe('validateStudentInput', () => {
 
   it.each([1, 5])('accepts the boundary year level %s', (yearLevel) => {
     expect(validateStudentInput({ ...valid, yearLevel }).yearLevel).toBe(yearLevel)
+  })
+})
+
+describe('assertStudentIsUnique', () => {
+  beforeEach(() => {
+    findOne.mockReset()
+  })
+
+  it('passes when no existing student matches', async () => {
+    findOne.mockResolvedValue(null)
+
+    await expect(
+      assertStudentIsUnique('new@sdca.edu.ph', 202499999)
+    ).resolves.not.toThrow()
+  })
+
+  it('rejects with 409 when the email already exists', async () => {
+    findOne.mockResolvedValueOnce({ _id: '1' })
+
+    await expect(
+      assertStudentIsUnique('juan.delacruz@sdca.edu.ph', 202499999)
+    ).rejects.toMatchObject({ statusCode: 409, message: 'Email is already in use.' })
+  })
+
+  it('rejects with 409 when the student number already exists', async () => {
+    findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ _id: '1' })
+
+    await expect(
+      assertStudentIsUnique('new@sdca.edu.ph', 202400123)
+    ).rejects.toMatchObject({ statusCode: 409, message: 'Student number is already in use.' })
   })
 })
