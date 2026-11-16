@@ -1,7 +1,6 @@
     import { z } from 'zod'
-    import { AcademicProgramModel } from '../models/AcademicProgram'
     import { EmployeeModel } from '../models/Employee'
-
+    import { getSessionUser } from '../utils/auth'
 
     const createEmployeeSchema = z.object({
       firstName: z.string().trim().min(1, 'First name is required'),
@@ -53,16 +52,52 @@
     })
 
     export default defineEventHandler(async (event) => {
-      const body = await readBody(event)
+  const sessionUser = getSessionUser(event)
+
+  if (!sessionUser?.emailAddress) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized'
+    })
+  }
+
+  const adminEmployee = await EmployeeModel.findOne({
+  emailAddress: sessionUser.emailAddress,
+  isAdmin: true
+})
+
+if (!adminEmployee) {
+  setResponseStatus(event, 403)
+
+  return {
+    success: false,
+    message: 'User not authorized to add employees.'
+  }
+}
+
+  const body = await readBody(event)
       const parseResult = createEmployeeSchema.safeParse(body)
 
       if (!parseResult.success) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Validation Error',
-          data: parseResult.error.flatten().fieldErrors
-        })
-      }
+  const conditionalErrors = [
+    'Primary program assignment is required for Faculty',
+    'Department must be null for non-Faculty employees',
+    'Admin privileges are only allowed for ICT Personnel'
+  ]
+
+  const isConditionalError = parseResult.error.issues.every(
+    issue => conditionalErrors.includes(issue.message)
+  )
+
+  setResponseStatus(event, isConditionalError ? 422 : 400)
+
+  return {
+    success: false,
+    message: isConditionalError
+      ? 'Invalid employee details or permissions.'
+      : 'Please provide valid employee information.'
+  }
+}
 
       const data = parseResult.data
 
@@ -74,25 +109,39 @@
       })
 
       if (existingEmployee) {
-        const isEmailDup = (existingEmployee as any).emailAddress === data.emailAddress
-        throw createError({
-          statusCode: 409,
-          statusMessage: isEmailDup
-            ? 'An employee record with this email address already exists.'
-            : 'An employee record with this employee number already exists.',
-        })
-      }
+  setResponseStatus(event, 409)
 
+  return {
+    success: false,
+    message: 'Employee email or employee number already exists.'
+  }
+}
 
-      const newEmployee = await EmployeeModel.create({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        emailAddress: data.emailAddress,
-        employeeNumber: data.employeeNumber,
-        type: data.type,
-        department: data.type === 'Faculty' && data.department ? data.department : 'N/A',
-        isAdmin: data.type === 'ICT Personnel' ? data.isAdmin : false,
-      } as any)
+try {
+  await EmployeeModel.create({
+    firstName: data.firstName,
+    lastName: data.lastName,
+    emailAddress: data.emailAddress,
+    employeeNumber: data.employeeNumber,
+    type: data.type,
+    department: data.type === 'Faculty' && data.department
+      ? data.department
+      : 'N/A',
+    isAdmin: data.type === 'ICT Personnel' ? data.isAdmin : false
+  } as any)
+} catch (error) {
+  if (error instanceof Error && 'code' in error && error.code === 11000) {
+    setResponseStatus(event, 409)
+
+    return {
+      success: false,
+      message: 'Employee email or employee number already exists.'
+    }
+  }
+
+  throw error
+}
+
 
    setResponseStatus(event, 201)
 
