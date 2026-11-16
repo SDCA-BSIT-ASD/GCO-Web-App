@@ -5,6 +5,10 @@ import type { Employee } from '#shared/types/User'
 import { UserModel } from './User'
 
 const employeeSchema: SchemaDefinition<Employee> = {
+  employeeNumber: {
+    type: String,
+    trim: true
+  },
   type: {
     type: String,
     required: true

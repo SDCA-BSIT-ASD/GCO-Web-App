@@ -15,6 +15,7 @@ export interface Student extends User {
 }
 
 export interface Employee extends User {
+  employeeNumber?: string
   type: string
   department: string
   isAdmin: boolean
