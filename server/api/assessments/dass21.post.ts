@@ -27,6 +27,36 @@ interface Dass21Responses extends Record<string, unknown> {
   item21: number
 }
 
+type Severity = 'Normal' | 'Mild' | 'Moderate' | 'Severe' | 'Extremely Severe'
+
+interface SeverityThresholds {
+  normal: number
+  mild: number
+  moderate: number
+  severe: number
+}
+
+const DEPRESSION_THRESHOLDS: SeverityThresholds = {
+  normal: 9,
+  mild: 13,
+  moderate: 20,
+  severe: 27
+}
+
+const ANXIETY_THRESHOLDS: SeverityThresholds = {
+  normal: 7,
+  mild: 9,
+  moderate: 14,
+  severe: 19
+}
+
+const STRESS_THRESHOLDS: SeverityThresholds = {
+  normal: 14,
+  mild: 18,
+  moderate: 25,
+  severe: 33
+}
+
 // Create the same error response format for authentication and validation failures.
 function throwApiError(statusCode: number, message: string): never {
   throw createError({
@@ -63,6 +93,17 @@ function hasValidResponseValues(
   }
 
   return true
+}
+
+function classifySeverity(
+  finalScore: number,
+  thresholds: SeverityThresholds
+): Severity {
+  if (finalScore <= thresholds.normal) return 'Normal'
+  if (finalScore <= thresholds.mild) return 'Mild'
+  if (finalScore <= thresholds.moderate) return 'Moderate'
+  if (finalScore <= thresholds.severe) return 'Severe'
+  return 'Extremely Severe'
 }
 
 // Check the request structure and every submitted DASS-21 response before processing it.
@@ -162,6 +203,9 @@ export default defineEventHandler(async (event) => {
   const depressionFinalScore = depressionRawScore * 2
   const anxietyFinalScore = anxietyRawScore * 2
   const stressFinalScore = stressRawScore * 2
+  const depressionSeverity = classifySeverity(depressionFinalScore, DEPRESSION_THRESHOLDS)
+  const anxietySeverity = classifySeverity(anxietyFinalScore, ANXIETY_THRESHOLDS)
+  const stressSeverity = classifySeverity(stressFinalScore, STRESS_THRESHOLDS)
 
   // The request reaches this response only after all checks have passed.
   return {
@@ -179,7 +223,10 @@ export default defineEventHandler(async (event) => {
         stress: {
           rawScore: stressRawScore,
           finalScore: stressFinalScore
-        }
+        },
+        depressionSeverity,
+        anxietySeverity,
+        stressSeverity
       }
     }
   }
