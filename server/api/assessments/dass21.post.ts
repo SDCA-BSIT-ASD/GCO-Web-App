@@ -159,19 +159,26 @@ export default defineEventHandler(async (event) => {
     responses.item14 +
     responses.item18
 
+  const depressionFinalScore = depressionRawScore * 2
+  const anxietyFinalScore = anxietyRawScore * 2
+  const stressFinalScore = stressRawScore * 2
+
   // The request reaches this response only after all checks have passed.
   return {
     success: true,
     data: {
       scores: {
         depression: {
-          rawScore: depressionRawScore
+          rawScore: depressionRawScore,
+          finalScore: depressionFinalScore
         },
         anxiety: {
-          rawScore: anxietyRawScore
+          rawScore: anxietyRawScore,
+          finalScore: anxietyFinalScore
         },
         stress: {
-          rawScore: stressRawScore
+          rawScore: stressRawScore,
+          finalScore: stressFinalScore
         }
       }
     }
