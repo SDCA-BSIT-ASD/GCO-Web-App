@@ -1,4 +1,3 @@
-
 <template>
   <div class="flex justify-center px-4 py-10">
     <div class="card w-full max-w-2xl border border-base-200 bg-base-100 shadow-sm">
