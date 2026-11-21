@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { StudentModel } from '../models/Student'
 
 // file .student and functions imported are assumed values at this point (mock)
-import { validateStudentInput, assertStudentIsUnique } from './student'
+import { validateStudentInput, ensureStudentDoesNotExist } from './student'
 
 vi.mock('../models/Student', () => ({
   StudentModel: { findOne: vi.fn() }
@@ -87,7 +87,9 @@ describe('validateStudentInput', () => {
   })
 })
 
-describe('assertStudentIsUnique', () => {
+describe('ensureStudentDoesNotExist', () => {
+  const student = { emailAddress: 'juan.delacruz@sdca.edu.ph', studentNumber: 202400123 }
+
   beforeEach(() => {
     findOne.mockReset()
   })
@@ -95,26 +97,28 @@ describe('assertStudentIsUnique', () => {
   it('passes when no existing student matches', async () => {
     findOne.mockResolvedValue(null)
 
-    await expect(
-      assertStudentIsUnique('new@sdca.edu.ph', 202499999)
-    ).resolves.not.toThrow()
+    await expect(ensureStudentDoesNotExist(student)).resolves.not.toThrow()
   })
 
-  it('rejects with 409 when the email already exists', async () => {
+  it('looks up by email or student number in one query', async () => {
+    findOne.mockResolvedValue(null)
+
+    await ensureStudentDoesNotExist(student)
+
+    expect(findOne).toHaveBeenCalledWith({
+      $or: [
+        { emailAddress: 'juan.delacruz@sdca.edu.ph' },
+        { studentNumber: 202400123 }
+      ]
+    })
+  })
+
+  it('rejects with 409 when a matching student exists', async () => {
     findOne.mockResolvedValueOnce({ _id: '1' })
 
-    await expect(
-      assertStudentIsUnique('juan.delacruz@sdca.edu.ph', 202499999)
-    ).rejects.toMatchObject({ statusCode: 409, message: 'Email is already in use.' })
-  })
-
-  it('rejects with 409 when the student number already exists', async () => {
-    findOne
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ _id: '1' })
-
-    await expect(
-      assertStudentIsUnique('new@sdca.edu.ph', 202400123)
-    ).rejects.toMatchObject({ statusCode: 409, message: 'Student number is already in use.' })
+    await expect(ensureStudentDoesNotExist(student)).rejects.toMatchObject({
+      statusCode: 409,
+      statusMessage: 'A student with that email address or student number already exists.'
+    })
   })
 })
