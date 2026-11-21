@@ -21,6 +21,13 @@ export default defineConfig({
           include: ['tests/e2e/*.{test,spec}.ts'],
           environment: 'node'
         }
+      },
+      {
+        test: {
+          name: 'employee-api',
+          include: ['tests/employee-list/*.integration.test.ts'],
+          environment: 'node'
+        }
       }
     ]
   }

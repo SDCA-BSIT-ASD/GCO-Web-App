@@ -1,0 +1,23 @@
+[
+  {
+    "employeeNumber": "EMP-001",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "johndoe@example.com",
+    "employeeType": "Regular"
+  },
+  {
+    "employeeNumber": "EMP-002",
+    "firstName": "Jane",
+    "lastName": "Santos",
+    "email": "jane.santos@example.com",
+    "employeeType": "Regular"
+  },
+  {
+    "employeeNumber": "EMP-003",
+    "firstName": "Alex",
+    "lastName": "Reyes",
+    "email": "alex.reyes@example.com",
+    "employeeType": "Regular"
+  }
+]

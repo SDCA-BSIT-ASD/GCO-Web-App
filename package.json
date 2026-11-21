@@ -9,6 +9,7 @@
     "preview": "nuxt preview",
     "test": "vitest run --project unit",
     "test-e2e": "vitest run --project e2e",
+    "test:employee-api": "vitest run --project employee-api",
     "test-ui": "vitest --ui",
     "postinstall": "nuxt prepare"
   },
