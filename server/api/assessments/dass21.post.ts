@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, readBody } from 'h3'
+import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3'
 
 import { StudentModel } from '../../models/Student'
 import { StudentResponseModel } from '../../models/StudentResponse'
@@ -209,51 +209,6 @@ export default defineEventHandler(async (event) => {
   const anxietySeverity = classifySeverity(anxietyFinalScore, ANXIETY_THRESHOLDS)
   const stressSeverity = classifySeverity(stressFinalScore, STRESS_THRESHOLDS)
 
-  const submission = await StudentResponseModel.create({
-    studentId: student._id,
-    assessmentType: 'DASS-21',
-    answers: [
-      responses.item1,
-      responses.item2,
-      responses.item3,
-      responses.item4,
-      responses.item5,
-      responses.item6,
-      responses.item7,
-      responses.item8,
-      responses.item9,
-      responses.item10,
-      responses.item11,
-      responses.item12,
-      responses.item13,
-      responses.item14,
-      responses.item15,
-      responses.item16,
-      responses.item17,
-      responses.item18,
-      responses.item19,
-      responses.item20,
-      responses.item21
-    ],
-    scores: {
-      depression: {
-        rawScore: depressionRawScore,
-        finalScore: depressionFinalScore,
-        severity: depressionSeverity
-      },
-      anxiety: {
-        rawScore: anxietyRawScore,
-        finalScore: anxietyFinalScore,
-        severity: anxietySeverity
-      },
-      stress: {
-        rawScore: stressRawScore,
-        finalScore: stressFinalScore,
-        severity: stressSeverity
-      }
-    }
-  })
-
   const requiresCounselorReview =
     depressionSeverity === 'Severe' ||
     depressionSeverity === 'Extremely Severe' ||
@@ -262,17 +217,75 @@ export default defineEventHandler(async (event) => {
     stressSeverity === 'Severe' ||
     stressSeverity === 'Extremely Severe'
 
-  if (requiresCounselorReview) {
-    await FlaggedResponseModel.create({
-      responseId: submission._id,
-      status: 'pending_priority_review'
+  let submission
+
+  try {
+    submission = await StudentResponseModel.create({
+      studentId: student._id,
+      assessmentType: 'DASS-21',
+      answers: [
+        responses.item1,
+        responses.item2,
+        responses.item3,
+        responses.item4,
+        responses.item5,
+        responses.item6,
+        responses.item7,
+        responses.item8,
+        responses.item9,
+        responses.item10,
+        responses.item11,
+        responses.item12,
+        responses.item13,
+        responses.item14,
+        responses.item15,
+        responses.item16,
+        responses.item17,
+        responses.item18,
+        responses.item19,
+        responses.item20,
+        responses.item21
+      ],
+      scores: {
+        depression: {
+          rawScore: depressionRawScore,
+          finalScore: depressionFinalScore,
+          severity: depressionSeverity
+        },
+        anxiety: {
+          rawScore: anxietyRawScore,
+          finalScore: anxietyFinalScore,
+          severity: anxietySeverity
+        },
+        stress: {
+          rawScore: stressRawScore,
+          finalScore: stressFinalScore,
+          severity: stressSeverity
+        }
+      },
+      submittedAt: new Date()
     })
+
+    if (requiresCounselorReview) {
+      await FlaggedResponseModel.create({
+        responseId: submission._id,
+        status: 'pending_priority_review'
+      })
+    }
+  } catch {
+    throwApiError(500, 'Unable to save the assessment. Please try again.')
   }
 
-  // The request reaches this response only after all checks have passed.
+  setResponseStatus(event, 201)
+
+  // Use the successfully saved record for the returned assessment data.
   return {
-    success: true,
+    message: 'DASS-21 assessment submitted successfully.',
     data: {
+      success: true,
+      counselorAlertTriggered: requiresCounselorReview,
+      submissionId: submission._id,
+      submittedAt: submission.submittedAt,
       scores: {
         depression: {
           rawScore: depressionRawScore,
