@@ -1,6 +1,8 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 
 import { StudentModel } from '../../models/Student'
+import { StudentResponseModel } from '../../models/StudentResponse'
+import { FlaggedResponseModel } from '../../models/FlaggedResponse'
 import { getSessionUser } from '../../utils/auth'
 
 interface Dass21Responses extends Record<string, unknown> {
@@ -206,6 +208,66 @@ export default defineEventHandler(async (event) => {
   const depressionSeverity = classifySeverity(depressionFinalScore, DEPRESSION_THRESHOLDS)
   const anxietySeverity = classifySeverity(anxietyFinalScore, ANXIETY_THRESHOLDS)
   const stressSeverity = classifySeverity(stressFinalScore, STRESS_THRESHOLDS)
+
+  const submission = await StudentResponseModel.create({
+    studentId: student._id,
+    assessmentType: 'DASS-21',
+    answers: [
+      responses.item1,
+      responses.item2,
+      responses.item3,
+      responses.item4,
+      responses.item5,
+      responses.item6,
+      responses.item7,
+      responses.item8,
+      responses.item9,
+      responses.item10,
+      responses.item11,
+      responses.item12,
+      responses.item13,
+      responses.item14,
+      responses.item15,
+      responses.item16,
+      responses.item17,
+      responses.item18,
+      responses.item19,
+      responses.item20,
+      responses.item21
+    ],
+    scores: {
+      depression: {
+        rawScore: depressionRawScore,
+        finalScore: depressionFinalScore,
+        severity: depressionSeverity
+      },
+      anxiety: {
+        rawScore: anxietyRawScore,
+        finalScore: anxietyFinalScore,
+        severity: anxietySeverity
+      },
+      stress: {
+        rawScore: stressRawScore,
+        finalScore: stressFinalScore,
+        severity: stressSeverity
+      }
+    }
+  })
+
+  const requiresCounselorReview =
+    depressionSeverity === 'Severe' ||
+    depressionSeverity === 'Extremely Severe' ||
+    anxietySeverity === 'Severe' ||
+    anxietySeverity === 'Extremely Severe' ||
+    stressSeverity === 'Severe' ||
+    stressSeverity === 'Extremely Severe'
+
+  if (requiresCounselorReview) {
+    await FlaggedResponseModel.create({
+      responseId: submission._id,
+      status: 'pending_priority_review'
+    })
+  }
 
   // The request reaches this response only after all checks have passed.
   return {
