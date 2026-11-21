@@ -87,6 +87,19 @@ describe('validateStudentInput', () => {
   })
 })
 
+it('converts numeric strings to numbers', () => {
+  const result = validateStudentInput({ ...valid, studentNumber: '202400123', yearLevel: '2' })
+
+  expect(result.studentNumber).toBe(202400123)
+  expect(result.yearLevel).toBe(2)
+})
+
+it('lowercases the email address', () => {
+  const result = validateStudentInput({ ...valid, emailAddress: 'Juan.DelaCruz@SDCA.EDU.PH' })
+
+  expect(result.emailAddress).toBe('juan.delacruz@sdca.edu.ph')
+})
+
 describe('ensureStudentDoesNotExist', () => {
   const student = { emailAddress: 'juan.delacruz@sdca.edu.ph', studentNumber: 202400123 }
 
