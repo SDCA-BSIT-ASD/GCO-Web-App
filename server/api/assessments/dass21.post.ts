@@ -246,6 +246,7 @@ export default defineEventHandler(async (event) => {
         responses.item20,
         responses.item21
       ],
+      overallSeverity: `(D) ${depressionSeverity}, (A) ${anxietySeverity}, (S) ${stressSeverity}`,
       scores: {
         depression: {
           rawScore: depressionRawScore,
