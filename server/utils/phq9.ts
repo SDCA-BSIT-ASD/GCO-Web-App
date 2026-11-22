@@ -24,3 +24,47 @@ export function getPhq9SeverityLabel(totalScore: number): string {
   if (totalScore <= 19) return "Moderately Severe Depression";
   return "Severe Depression";
 }
+
+export interface FormattedPhq9ResponseItem {
+  questionNumber: number;
+  statement: string;
+  value: number;
+  label: string;
+}
+
+export function normalizePhq9Responses(
+  rawAnswers: unknown[] = [],
+): FormattedPhq9ResponseItem[] {
+  const byQuestion = new Map<number, number>();
+
+  rawAnswers.forEach((item, index) => {
+    if (typeof item === "number") {
+      const qNum = index + 1;
+      if (qNum >= 1 && qNum <= 9) {
+        byQuestion.set(qNum, item);
+      }
+    } else if (item && typeof item === "object") {
+      const record = item as Record<string, unknown>;
+      const qNum = Number(record.questionNumber ?? index + 1);
+      const val = Number(record.value ?? record.score ?? record.answer ?? 0);
+      if (qNum >= 1 && qNum <= 9) {
+        byQuestion.set(qNum, val);
+      }
+    }
+  });
+
+  return Array.from({ length: 9 }, (_, i) => {
+    const questionNumber = i + 1;
+    const rawValue = byQuestion.get(questionNumber) ?? 0;
+    const value = Number.isFinite(rawValue)
+      ? Math.min(3, Math.max(0, Math.round(rawValue)))
+      : 0;
+
+    return {
+      questionNumber,
+      statement: PHQ9_QUESTIONS[questionNumber],
+      value,
+      label: PHQ9_RESPONSE_LABELS[value] ?? "Not at all",
+    };
+  });
+}
