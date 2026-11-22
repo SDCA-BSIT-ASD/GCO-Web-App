@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 import { defineEventHandler, getRouterParam, setResponseStatus } from "h3";
 
 import { EmployeeModel } from "../../../models/Employee";
+import { StudentModel } from "../../../models/Student";
 import { StudentResponseModel } from "../../../models/StudentResponse";
 import { getSessionUser } from "../../../utils/auth";
+import { formatPhq9EntryDetail } from "../../../utils/phq9";
 
 export default defineEventHandler(async (event) => {
   // 1. Check authentication (401 Unauthorized)
@@ -59,9 +61,15 @@ export default defineEventHandler(async (event) => {
     };
   }
 
+  // 4. Fetch submitting student profile and return formatted response (200 OK)
+  const student = await StudentModel.findById(submission.studentId).lean();
+
   setResponseStatus(event, 200);
   return {
     success: true,
-    data: submission,
+    data: formatPhq9EntryDetail({
+      submission,
+      student,
+    }),
   };
 });
