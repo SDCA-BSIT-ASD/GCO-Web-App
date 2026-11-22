@@ -68,3 +68,67 @@ export function normalizePhq9Responses(
     };
   });
 }
+
+export function formatPhq9EntryDetail(params: {
+  submission: {
+    _id: unknown;
+    submittedAt?: Date | string;
+    answers?: unknown[];
+  };
+  student: {
+    firstName?: string;
+    lastName?: string;
+    studentNumber?: string;
+    programName?: string;
+    yearLevel?: number | string;
+  } | null;
+}) {
+  const { submission, student } = params;
+  const responses = normalizePhq9Responses(submission.answers ?? []);
+  const totalScore = responses.reduce((sum, item) => sum + item.value, 0);
+  const severityLabel = getPhq9SeverityLabel(totalScore);
+
+  const question9 = responses.find((item) => item.questionNumber === 9) ?? {
+    questionNumber: 9,
+    statement: PHQ9_QUESTIONS[9],
+    value: 0,
+    label: PHQ9_RESPONSE_LABELS[0],
+  };
+
+  const isFlagged = question9.value > 0;
+  const flagDetails = isFlagged
+    ? {
+        questionNumber: 9,
+        value: question9.value,
+        label: question9.label,
+      }
+    : null;
+
+  const fullName = [student?.firstName, student?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const parsedYearLevel =
+    student?.yearLevel !== undefined && student?.yearLevel !== null
+      ? Number(student.yearLevel)
+      : 0;
+
+  return {
+    id: String(submission._id),
+    submittedAt: submission.submittedAt
+      ? new Date(submission.submittedAt).toISOString()
+      : new Date().toISOString(),
+    student: {
+      name: fullName,
+      studentNumber: String(student?.studentNumber ?? ""),
+      program: String(student?.programName ?? ""),
+      yearLevel: Number.isFinite(parsedYearLevel) ? parsedYearLevel : 0,
+    },
+    responses,
+    totalScore,
+    severityLabel,
+    isFlagged,
+    flagDetails,
+  };
+}
