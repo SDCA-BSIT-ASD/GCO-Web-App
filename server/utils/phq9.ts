@@ -16,3 +16,11 @@ export const PHQ9_RESPONSE_LABELS: Record<number, string> = {
   2: "More than half the days",
   3: "Nearly every day",
 };
+
+export function getPhq9SeverityLabel(totalScore: number): string {
+  if (totalScore <= 4) return "Minimal or No Depression";
+  if (totalScore <= 9) return "Mild Depression";
+  if (totalScore <= 14) return "Moderate Depression";
+  if (totalScore <= 19) return "Moderately Severe Depression";
+  return "Severe Depression";
+}
