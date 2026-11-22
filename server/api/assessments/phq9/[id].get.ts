@@ -1,6 +1,8 @@
-import { defineEventHandler, setResponseStatus } from "h3";
+import mongoose from "mongoose";
+import { defineEventHandler, getRouterParam, setResponseStatus } from "h3";
 
 import { EmployeeModel } from "../../../models/Employee";
+import { StudentResponseModel } from "../../../models/StudentResponse";
 import { getSessionUser } from "../../../utils/auth";
 
 export default defineEventHandler(async (event) => {
@@ -33,9 +35,33 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  setResponseStatus(event, 501);
+  // 3. Validate submission ID format and fetch PHQ-9 submission (404 Not Found)
+  const id = getRouterParam(event, "id");
+
+  if (!id || !mongoose.isValidObjectId(id)) {
+    setResponseStatus(event, 404);
+    return {
+      success: false,
+      message: "PHQ-9 submission not found.",
+    };
+  }
+
+  const submission = await StudentResponseModel.findOne({
+    _id: id,
+    assessmentType: { $regex: /^phq-?9$/i },
+  }).lean();
+
+  if (!submission) {
+    setResponseStatus(event, 404);
+    return {
+      success: false,
+      message: "PHQ-9 submission not found.",
+    };
+  }
+
+  setResponseStatus(event, 200);
   return {
-    success: false,
-    message: "Not implemented yet.",
+    success: true,
+    data: submission,
   };
 });
