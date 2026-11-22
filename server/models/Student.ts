@@ -1,26 +1,30 @@
-import type { SchemaDefinition } from 'mongoose'
-import { defineMongooseDiscriminatorModel } from '#nuxt/mongoose'
+import type { SchemaDefinition } from "mongoose";
+import { defineMongooseDiscriminatorModel } from "#nuxt/mongoose";
 
-import type { Student } from '#shared/types/User'
-import { UserModel } from './User'
+import type { Student } from "#shared/types/User";
+import { UserModel } from "./User";
 
 const studentSchema: SchemaDefinition<Student> = {
+  studentNumber: {
+    type: String,
+    trim: true,
+  },
   programName: {
     type: String,
-    required: true
+    required: true,
   },
   yearLevel: {
     type: Number,
-    required: true
+    required: true,
   },
   status: {
     type: String,
-    required: true
-  }
-}
+    required: true,
+  },
+};
 
 export const StudentModel = defineMongooseDiscriminatorModel({
-  name: 'Student',
+  name: "Student",
   baseModel: UserModel,
-  schema: studentSchema
-})
+  schema: studentSchema,
+});
