@@ -155,6 +155,9 @@ describe("GET /api/assessments/phq9/:id", () => {
 
     expect(event.node.res.statusCode).toBe(200);
     expect(result.success).toBe(true);
+    if (!result.data) {
+      throw new Error("Expected result.data to be defined");
+    }
     expect(result.data).toMatchObject({
       id: validSubmissionId,
       submittedAt: "2026-10-16T08:30:00.000Z",
@@ -211,6 +214,9 @@ describe("GET /api/assessments/phq9/:id", () => {
     const result = await handler(event);
 
     expect(event.node.res.statusCode).toBe(200);
+    if (!result.data) {
+      throw new Error("Expected result.data to be defined");
+    }
     expect(result.data.student.yearLevel).toBe(2);
     expect(result.data.totalScore).toBe(3);
     expect(result.data.severityLabel).toBe("Minimal or No Depression");

@@ -62,11 +62,25 @@ export function normalizePhq9Responses(
 
     return {
       questionNumber,
-      statement: PHQ9_QUESTIONS[questionNumber],
+      statement: PHQ9_QUESTIONS[questionNumber] ?? "",
       value,
       label: PHQ9_RESPONSE_LABELS[value] ?? "Not at all",
     };
   });
+}
+
+function extractSubmissionId(id: unknown): string {
+  if (typeof id === "string") {
+    return id;
+  }
+  if (
+    typeof id === "object" &&
+    id !== null &&
+    typeof (id as { toString?: unknown }).toString === "function"
+  ) {
+    return (id as { toString(): string }).toString();
+  }
+  return "";
 }
 
 export function formatPhq9EntryDetail(params: {
@@ -90,9 +104,9 @@ export function formatPhq9EntryDetail(params: {
 
   const question9 = responses.find((item) => item.questionNumber === 9) ?? {
     questionNumber: 9,
-    statement: PHQ9_QUESTIONS[9],
+    statement: PHQ9_QUESTIONS[9] ?? "",
     value: 0,
-    label: PHQ9_RESPONSE_LABELS[0],
+    label: PHQ9_RESPONSE_LABELS[0] ?? "Not at all",
   };
 
   const isFlagged = question9.value > 0;
@@ -115,7 +129,7 @@ export function formatPhq9EntryDetail(params: {
       : 0;
 
   return {
-    id: String(submission._id),
+    id: extractSubmissionId(submission._id),
     submittedAt: submission.submittedAt
       ? new Date(submission.submittedAt).toISOString()
       : new Date().toISOString(),

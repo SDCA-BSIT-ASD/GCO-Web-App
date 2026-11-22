@@ -24,12 +24,12 @@ export default defineEventHandler(async (event) => {
     emailAddress: sessionUser.emailAddress,
   }).lean();
 
-  if (
-    !employee ||
-    String(employee.type || "")
-      .trim()
-      .toLowerCase() !== "counselor"
-  ) {
+  const employeeRole =
+    employee && "type" in employee && typeof employee.type === "string"
+      ? employee.type.trim().toLowerCase()
+      : "";
+
+  if (employeeRole !== "counselor") {
     setResponseStatus(event, 403);
     return {
       success: false,
