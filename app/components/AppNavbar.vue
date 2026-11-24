@@ -53,6 +53,7 @@
   const navLinks = [
     { label: 'Dashboard', to: '/' },
     { label: 'Academic Terms', to: '/academic-terms' },
+    { label: 'DASS-21 Entries', to: '/dass21-entries' },
     { label: 'Reports', to: '/reports' },
   ]
 
