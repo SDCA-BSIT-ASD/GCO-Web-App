@@ -1,6 +1,3 @@
-<template>
-  <div>Student Details</div>
-</template>
 <script setup lang="ts">
 // Counselor: View Student Details [Frontend] (#74)
 // Route: /students/[id]  (read-only page)
