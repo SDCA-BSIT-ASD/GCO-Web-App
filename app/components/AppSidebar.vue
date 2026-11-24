@@ -42,6 +42,7 @@
 
   const navLinks = [
     { label: 'Dashboard', to: '/' },
+    { label: 'Students', to: '/students/id' },
     { label: 'Academic Terms', to: '/academic-terms' },
     { label: 'Reports', to: '/reports' },
   ]
