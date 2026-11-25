@@ -21,6 +21,14 @@ export default defineConfig({
           include: ['tests/e2e/*.{test,spec}.ts'],
           environment: 'node'
         }
+      },
+      {
+        extends: true,
+        test: {
+          name: 'issue-44',
+          include: ['tests/issue-44-counselor-student-list/**/*.test.ts'],
+          environment: 'node'
+        }
       }
     ]
   }
