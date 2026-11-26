@@ -1,35 +1,48 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { H3Event } from 'h3'
 
 // ---------------------------------------------------------------------------
-// Mocks: isolate the handler from the real DB, the real session, and h3 status
-// helpers so we only test the handler's own logic.
+// Unit tests (backend) for Counselor: Show Student List
+//
+//   1. GET /api/students handler            (server/api/students.get.ts)
+//   2. Counselor role check                 (server/utils/counselor-auth.ts)
+//
+// Everything outside the unit under test (database, session, h3 status helper)
+// is mocked.
 // ---------------------------------------------------------------------------
-const { find, getCounselorAccessError, setResponseStatus } = vi.hoisted(() => ({
-  find: vi.fn(),
-  getCounselorAccessError: vi.fn(),
-  setResponseStatus: vi.fn()
-}))
+const { find, findOne, getSessionUser, getCounselorAccessError, setResponseStatus } = vi.hoisted(
+  () => ({
+    find: vi.fn(),
+    findOne: vi.fn(),
+    getSessionUser: vi.fn(),
+    getCounselorAccessError: vi.fn(),
+    setResponseStatus: vi.fn()
+  })
+)
 
 vi.mock('h3', async (importOriginal) => {
   const actual = await importOriginal<typeof import('h3')>()
   return { ...actual, setResponseStatus }
 })
 
-vi.mock('../../server/models/Student', () => ({
-  StudentModel: { find }
-}))
+vi.mock('../../server/models/Student', () => ({ StudentModel: { find } }))
+vi.mock('../../server/models/Employee', () => ({ EmployeeModel: { findOne } }))
+vi.mock('../../server/utils/auth', () => ({ getSessionUser }))
+// The handler tests use a mocked role check. The role-check tests further down
+// load the REAL counselor-auth module with vi.importActual.
+vi.mock('../../server/utils/counselor-auth', () => ({ getCounselorAccessError }))
 
-vi.mock('../../server/utils/counselor-auth', () => ({
-  getCounselorAccessError
-}))
+import studentsHandler from '../../server/api/students.get'
 
-import handler from '../../server/api/students.get'
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 const event = {} as H3Event
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
+
+// ---------------------------------------------------------------------------
+// 1. GET /api/students handler
+// ---------------------------------------------------------------------------
 
 // Mimics Mongoose's StudentModel.find().select(...).lean() chain.
 function mockStudentQuery(docs: unknown[]) {
@@ -79,13 +92,6 @@ const rawStudents = [
   }
 ]
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 describe('GET /api/students handler', () => {
   describe('as an authorized counselor', () => {
     beforeEach(() => {
@@ -95,7 +101,7 @@ describe('GET /api/students handler', () => {
     it('returns student records with the correct object shape', async () => {
       mockStudentQuery(rawStudents)
 
-      const result = await handler(event)
+      const result = await studentsHandler(event)
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(2)
@@ -119,7 +125,7 @@ describe('GET /api/students handler', () => {
     it('uses the correct field types', async () => {
       mockStudentQuery(rawStudents)
 
-      const { data } = await handler(event)
+      const { data } = await studentsHandler(event)
 
       for (const student of data!) {
         expect(typeof student.studentNumber).toBe('string')
@@ -135,7 +141,7 @@ describe('GET /api/students handler', () => {
     it('does not leak internal fields such as _id, __v, googleId or timestamps', async () => {
       mockStudentQuery(rawStudents)
 
-      const { data } = await handler(event)
+      const { data } = await studentsHandler(event)
 
       for (const student of data!) {
         expect(student).not.toHaveProperty('_id')
@@ -149,7 +155,7 @@ describe('GET /api/students handler', () => {
     it('returns an empty list when no student records exist', async () => {
       mockStudentQuery([])
 
-      const result = await handler(event)
+      const result = await studentsHandler(event)
 
       expect(result).toEqual({ success: true, data: [] })
     })
@@ -157,7 +163,7 @@ describe('GET /api/students handler', () => {
     it('does not set an error status code', async () => {
       mockStudentQuery(rawStudents)
 
-      await handler(event)
+      await studentsHandler(event)
 
       expect(setResponseStatus).not.toHaveBeenCalled()
     })
@@ -170,7 +176,7 @@ describe('GET /api/students handler', () => {
         message: 'Authentication required.'
       })
 
-      const result = await handler(event)
+      const result = await studentsHandler(event)
 
       expect(setResponseStatus).toHaveBeenCalledWith(event, 401)
       expect(result).toEqual({ success: false, message: 'Authentication required.' })
@@ -183,11 +189,99 @@ describe('GET /api/students handler', () => {
         message: 'Counselor access required.'
       })
 
-      const result = await handler(event)
+      const result = await studentsHandler(event)
 
       expect(setResponseStatus).toHaveBeenCalledWith(event, 403)
       expect(result).toEqual({ success: false, message: 'Counselor access required.' })
       expect(find).not.toHaveBeenCalled()
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 2. Counselor role check (real module; its dependencies are mocked above)
+// ---------------------------------------------------------------------------
+describe('getCounselorAccessError (role check)', () => {
+  let realGetCounselorAccessError: (event: H3Event) => Promise<{
+    statusCode: number
+    message: string
+  } | null>
+
+  beforeAll(async () => {
+    const actual = await vi.importActual<typeof import('../../server/utils/counselor-auth')>(
+      '../../server/utils/counselor-auth'
+    )
+    realGetCounselorAccessError = actual.getCounselorAccessError
+  })
+
+  describe('unauthenticated requests -> 401', () => {
+    it('returns 401 when there is no session user', async () => {
+      getSessionUser.mockReturnValue(null)
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error).toEqual({ statusCode: 401, message: 'Authentication required.' })
+      expect(findOne).not.toHaveBeenCalled()
+    })
+
+    it('returns 401 when the session user has no emailAddress', async () => {
+      getSessionUser.mockReturnValue({ firstName: 'No', lastName: 'Email' })
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error?.statusCode).toBe(401)
+      expect(findOne).not.toHaveBeenCalled()
+    })
+
+    it('returns 401 when the emailAddress is an empty string', async () => {
+      getSessionUser.mockReturnValue({ emailAddress: '' })
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error?.statusCode).toBe(401)
+    })
+
+    it('returns 401 when the emailAddress is not a string', async () => {
+      getSessionUser.mockReturnValue({ emailAddress: 12345 })
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error?.statusCode).toBe(401)
+    })
+  })
+
+  describe('authenticated but not a counselor -> 403', () => {
+    it('returns 403 for a signed-in user with no matching counselor record (e.g. a student)', async () => {
+      getSessionUser.mockReturnValue({ emailAddress: 'student@sdca.edu.ph' })
+      findOne.mockResolvedValue(null)
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error).toEqual({ statusCode: 403, message: 'Counselor access required.' })
+    })
+
+    it('only looks for Employees of type "Counselor" matching the session email', async () => {
+      getSessionUser.mockReturnValue({ emailAddress: 'someone@sdca.edu.ph' })
+      findOne.mockResolvedValue(null)
+
+      await realGetCounselorAccessError(event)
+
+      // A non-counselor employee (any other employee type) is filtered out by this query
+      expect(findOne).toHaveBeenCalledWith({
+        emailAddress: 'someone@sdca.edu.ph',
+        type: 'Counselor'
+      })
+    })
+  })
+
+  describe('authorized counselor', () => {
+    it('returns null when a matching counselor record exists', async () => {
+      getSessionUser.mockReturnValue({ emailAddress: 'counselor@sdca.edu.ph' })
+      findOne.mockResolvedValue({ emailAddress: 'counselor@sdca.edu.ph', type: 'Counselor' })
+
+      const error = await realGetCounselorAccessError(event)
+
+      expect(error).toBeNull()
     })
   })
 })

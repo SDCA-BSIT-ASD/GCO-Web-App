@@ -22,11 +22,11 @@ export default defineConfig({
           environment: 'node'
         }
       },
-      {
+            {
         extends: true,
         test: {
           name: 'issue-44',
-          include: ['tests/issue-44-counselor-student-list/**/*.test.ts'],
+          include: ['tests/counselor-show-student-list/**/*.test.ts'],
           environment: 'node'
         }
       }
