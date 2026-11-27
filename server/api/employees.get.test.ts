@@ -1,3 +1,4 @@
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -37,6 +38,7 @@ describe('GET /api/employees', () => {
     mocks.findEmployees.mockReturnValue({
       select: () => ({
         lean: () => Promise.resolve([{
+          employeeNumber: 'EMP-001',
           firstName: 'John',
           lastName: 'Doe',
           emailAddress: 'johndoe@example.com',
@@ -46,33 +48,41 @@ describe('GET /api/employees', () => {
     })
   })
 
-  it('returns the agreed employee response for admins', async () => {
+  it('returns the employee list with required fields for admins', async () => {
     const event = createEvent()
 
     await expect(getEmployees(event)).resolves.toEqual({
       success: true,
       message: 'Employee data retrieved successfully',
       data: [{
+        employeeNumber: 'EMP-001',
         firstName: 'John',
         lastName: 'Doe',
         email: 'johndoe@example.com',
         employeeType: 'Regular'
       }]
     })
+
+    expect(event.node.res.statusCode).toBe(200)
+    expect(mocks.findEmployees).toHaveBeenCalledWith({})
   })
 
-  it('returns the empty-record response when no employees exist', async () => {
+  it('returns an empty list when no employee records exist', async () => {
     mocks.findEmployees.mockReturnValue({
       select: () => ({
         lean: () => Promise.resolve([])
       })
     })
 
-    await expect(getEmployees(createEvent())).resolves.toEqual({
+    const event = createEvent()
+
+    await expect(getEmployees(event)).resolves.toEqual({
       success: true,
       message: 'Employee Records Are Currently Empty',
       data: []
     })
+
+    expect(event.node.res.statusCode).toBe(200)
   })
 
   it('returns 401 when the user is not logged in', async () => {
@@ -83,7 +93,9 @@ describe('GET /api/employees', () => {
       success: false,
       message: 'Authentication required. Please log in.'
     })
+
     expect(event.node.res.statusCode).toBe(401)
+    expect(mocks.findAdmin).not.toHaveBeenCalled()
   })
 
   it('returns 403 when the logged-in user is not an admin', async () => {
@@ -94,11 +106,12 @@ describe('GET /api/employees', () => {
       success: false,
       message: 'Only admins are authorized to view the employee list.'
     })
+
     expect(event.node.res.statusCode).toBe(403)
     expect(mocks.findEmployees).not.toHaveBeenCalled()
   })
 
-  it('returns the generic 500 response when retrieval fails', async () => {
+  it('returns 500 when employee retrieval fails', async () => {
     mocks.findAdmin.mockRejectedValue(new Error('database unavailable'))
     const event = createEvent()
 
@@ -106,6 +119,7 @@ describe('GET /api/employees', () => {
       success: false,
       message: 'Failed To Retrieve Employees Data.'
     })
+
     expect(event.node.res.statusCode).toBe(500)
   })
 })

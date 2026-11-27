@@ -1,3 +1,4 @@
+
 import { defineEventHandler, setResponseStatus } from 'h3'
 
 import { EmployeeModel } from '../models/Employee'
@@ -29,8 +30,10 @@ export default defineEventHandler(async (event) => {
     }
 
     const employees = await EmployeeModel.find({})
-      .select('firstName lastName emailAddress type')
+      .select('employeeNumber firstName lastName emailAddress type')
       .lean()
+
+    setResponseStatus(event, 200)
 
     if (employees.length === 0) {
       return {
@@ -44,6 +47,7 @@ export default defineEventHandler(async (event) => {
       success: true,
       message: 'Employee data retrieved successfully',
       data: employees.map(employee => ({
+        employeeNumber: employee.employeeNumber,
         firstName: employee.firstName,
         lastName: employee.lastName,
         email: employee.emailAddress,
