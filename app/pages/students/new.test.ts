@@ -76,4 +76,15 @@ describe('Add Student form page', () => {
     expect(wrapper.get('#email-address').classes()).toContain('input-error')
   })
 
+  // test 8: clicking cancel must send user back to user management page and discard unsaved input
+    it('goes back to the students list on Cancel', async () => {
+    const navigateTo = vi.fn()
+    const wrapper = mount(NewStudentPage, { global: { mocks: { navigateTo } } })
+
+    await wrapper.get('#first-name').setValue('Juan')
+    await wrapper.get('button[type="button"]').trigger('click')
+
+    expect(navigateTo).toHaveBeenCalledWith('/students')
+  })
+
 })
