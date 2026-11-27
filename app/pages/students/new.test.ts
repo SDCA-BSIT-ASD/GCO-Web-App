@@ -24,4 +24,22 @@ describe('Add Student form page', () => {
     expect(wrapper.find('input[type="password"]').exists()).toBe(false)
   })
 
+    // test 3: status dropdown must contain Regular and Irregular
+  it('offers Regular and Irregular as status options', () => {
+    const wrapper = mount(NewStudentPage)
+    const options = wrapper.findAll('#status option').map(o => o.text())
+
+    expect(options).toEqual(expect.arrayContaining(['Regular', 'Irregular']))
+  })
+
+  // test 4: year level must show 1-5
+  it('offers year levels 1 to 5', () => {
+    const wrapper = mount(NewStudentPage)
+    const values = wrapper.findAll('#year-level option')
+      .map(o => o.attributes('value'))
+      .filter(Boolean)
+
+    expect(values).toEqual(['1', '2', '3', '4', '5'])
+  })
+
 })
