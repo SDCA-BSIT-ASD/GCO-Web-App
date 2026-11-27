@@ -58,7 +58,16 @@ describe('Students list page', () => {
 
   it('renders the agreed student columns and records without management controls', () => {
     mockStudentsFetch({ data: { success: true, data: [student] } })
-    const wrapper = mount(StudentListPage)
+    const wrapper = mount(StudentListPage, {
+      global: {
+        stubs: {
+          NuxtLink: {
+            props: ['to'],
+            template: '<a :href="to"><slot /></a>'
+          }
+        }
+      }
+    })
 
     expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual([
       'Student Number',
@@ -78,6 +87,27 @@ describe('Students list page', () => {
     ])
     expect(wrapper.text()).not.toContain('Add Student')
     expect(wrapper.findAll('button')).toHaveLength(0)
+  })
+
+  it('navigates to student details when a row is clicked', async () => {
+    mockStudentsFetch({ data: { success: true, data: [student] } })
+    const navigateTo = vi.fn()
+    vi.stubGlobal('navigateTo', navigateTo)
+    const wrapper = mount(StudentListPage, {
+      global: {
+        stubs: {
+          NuxtLink: {
+            props: ['to'],
+            template: '<a :href="to"><slot /></a>'
+          }
+        }
+      }
+    })
+
+    await wrapper.get('tbody tr').trigger('click')
+
+    expect(navigateTo).toHaveBeenCalledWith('/students/202600901')
+    expect(wrapper.get('tbody a').attributes('href')).toBe('/students/202600901')
   })
 
   it('renders labeled sample data in development preview mode without fetching', () => {

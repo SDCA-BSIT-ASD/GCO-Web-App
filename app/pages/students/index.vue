@@ -23,8 +23,21 @@
           <tr v-if="students.length === 0">
             <td colspan="6">No student records found.</td>
           </tr>
-          <tr v-for="student in students" :key="student.studentNumber">
-            <td>{{ student.studentNumber }}</td>
+          <tr
+            v-for="student in students"
+            :key="student.studentNumber"
+            class="cursor-pointer hover"
+            @click="openStudent(student.studentNumber)"
+          >
+            <td>
+              <NuxtLink
+                :to="studentDetailPath(student.studentNumber)"
+                class="link"
+                @click.stop
+              >
+                {{ student.studentNumber }}
+              </NuxtLink>
+            </td>
             <td>{{ student.firstName }} {{ student.lastName }}</td>
             <td>{{ student.emailAddress }}</td>
             <td>{{ student.programName }}</td>
@@ -65,6 +78,14 @@
   const response = computed(() => isPreviewMode ? previewResponse : apiResponse.value)
   const students = computed(() => response.value?.success ? response.value.data : [])
   const hasError = computed(() => Boolean(error.value) || response.value?.success === false || (!pending.value && !response.value))
+
+  function studentDetailPath(studentNumber: string) {
+    return `/students/${encodeURIComponent(studentNumber)}`
+  }
+
+  function openStudent(studentNumber: string) {
+    return navigateTo(studentDetailPath(studentNumber))
+  }
 
   const errorMessage = computed(() => {
     if (response.value?.success === false && response.value.message) {
