@@ -1,3 +1,4 @@
+
 export interface User {
   emailAddress: string
   firstName: string
@@ -15,7 +16,8 @@ export interface Student extends User {
 }
 
 export interface Employee extends User {
+  employeeNumber: string
   type: string
-  department: string
+  department: string | null
   isAdmin: boolean
 }

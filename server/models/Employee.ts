@@ -1,3 +1,4 @@
+
 import type { SchemaDefinition } from 'mongoose'
 import { defineMongooseDiscriminatorModel } from '#nuxt/mongoose'
 
@@ -5,13 +6,18 @@ import type { Employee } from '#shared/types/User'
 import { UserModel } from './User'
 
 const employeeSchema: SchemaDefinition<Employee> = {
+  employeeNumber: {
+    type: String,
+    required: true,
+    trim: true
+  },
   type: {
     type: String,
     required: true
   },
   department: {
     type: String,
-    required: true
+    default: null
   },
   isAdmin: {
     type: Boolean,
